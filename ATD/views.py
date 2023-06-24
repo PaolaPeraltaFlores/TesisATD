@@ -3,18 +3,21 @@ from django.shortcuts import render
 # Create your views here.
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import gallery
+from rest_framework.response import Response
+from rest_framework import viewsets
+from rest_framework.generics import  CreateAPIView
+from .models import Gallery
 from django.views.decorators.csrf import csrf_exempt
 from roboflow import Roboflow
+from .serializer import GallerySerializer
 import os
 import cv2
 import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(BASE_DIR)
 
 def recortarimagen(nameimageprediction):
-
+    print('nombre', nameimageprediction.split('\\'))
     imagen = cv2.imread(nameimageprediction)
 
     # Convertir la imagen a escala de grises
@@ -51,7 +54,8 @@ def recortarimagen(nameimageprediction):
     imagen_recortada_final = cv2.add(imagen_recortada, imagen_fondo_blanco)
 
     # Guardar la imagen resultante
-    directorionuevo1 = os.path.join(BASE_DIR, "media", "recorte", "recorte"+ imagen_recortada_final)
+    name_image_ref = "recorte"+ str(nameimageprediction)
+    directorionuevo1 = os.path.join(BASE_DIR, "media", "recorte", name_image_ref)
     cv2.imwrite(directorionuevo1, imagen_recortada_final)
 
     # Mostrar la imagen original y la imagen recortada
@@ -66,13 +70,11 @@ def handleMultipleImagesUpload(request):
     if request.method == "POST":
         
         images = request.FILES['images']
-        print(images.file)
         name_image = str(images)
-        gallery.objects.create(image = images, name_image=name_image)
-        uploaded_images = gallery.objects.all()
+        gallery_new = Gallery.objects.create(image = images, name_image=name_image)
 
-        nueva_img = gallery.objects.last()
-        print("LENGUA"+str(nueva_img.name_image))
+
+        nueva_img = Gallery.objects.last()
 
         rf = Roboflow(api_key="ezWoyGKUgHzvpZ7l34C3")
         project = rf.workspace().project("tongue-segmentation")
@@ -85,11 +87,25 @@ def handleMultipleImagesUpload(request):
 
         # save an image annotated with your predictions
         imagendirectorio = os.path.join(BASE_DIR, "media",  name_image )
-        print(imagendirectorio)
-        directorionuevo = os.path.join(BASE_DIR, "media", "prediccion", "prediccion"+ name_image)
+        name_Image_concat = "prediccion"+ name_image
+        directorionuevo = os.path.join(BASE_DIR, "media", "prediccion", name_Image_concat)
         model.predict(imagendirectorio).save(directorionuevo)
         recortarimagen(directorionuevo)
 
-        return JsonResponse({"images": [{"url": image.image.url, "name": image.name_image} for image in uploaded_images]})
-        return render(request, "index.html")
-    
+        uploaded_images = Gallery.objects.filter(pk = gallery_new.id)
+        serializer = GallerySerializer(data=uploaded_images)
+        if serializer.is_valid():
+            serializer.save()
+            print(uploaded_images)
+            return Response({"images id":serializer.data})
+        return Response({'message':"Error al retornar respuesta"})
+
+class UserViewSet(CreateAPIView):
+    authentication_classes = []
+    def create(self,request):
+        print(request.data)
+        images = request.FILES['images']
+        print(images)
+        return Response({'message':'Upload successfull'})
+
+

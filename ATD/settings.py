@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'debug_toolbar',
     'ATD',
+    'knox',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'ATD.urls'
@@ -142,8 +146,20 @@ REST_FRAMEWORK = {
     #      'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
     #      'EXCEPTION_HANDLER': 'orm_sqlfan.exceptions.custom_exception_handler'
     #      'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',]
-    'DEFAULT_AUTHENTICATION_CLASSES': ['knox.auth.TokenAuthentication', ]
+    'DEFAULT_AUTHENTICATION_CLASSES': ['knox.auth.TokenAuthentication', 'django.middleware.common.CommonMiddleware',],
+
 }
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 # AUTHENTICATION_BACKENDS = (
 #      'django.contrib.auth.backends.ModelBackend',
