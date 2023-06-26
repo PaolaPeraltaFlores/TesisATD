@@ -11,4 +11,4 @@ model = project.version(1).model
 #print(model.predict("lengua1.jpg").json())
 
 # save an image annotated with your predictions
-model.predict("sab.jpg").save("segsab.jpg")
+model.predict("lengua2.jpg").save("seg2.jpg")

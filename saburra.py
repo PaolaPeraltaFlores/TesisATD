@@ -22,7 +22,7 @@ def encontrar_pixeles_fondo_blanco(imagen):
     return pixeles_fondo_blanco
 
 # Cargar la imagen
-imagen = cv2.imread('recorsab.jpg')
+imagen = cv2.imread('recortar1.jpg')
 
 # Encontrar los píxeles de fondo blanco
 pixeles = encontrar_pixeles_fondo_blanco(imagen)

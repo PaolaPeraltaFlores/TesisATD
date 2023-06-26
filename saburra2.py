@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Cargar la imagen
-imagen = cv2.imread('recorsab.jpg')
+imagen = cv2.imread('recortar1.jpg')
 
 # Convertir la imagen a escala de grises
 grises = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)

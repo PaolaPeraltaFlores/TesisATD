@@ -64,12 +64,13 @@ def recortarimagen(nameimageprediction):
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
 
-        
-@csrf_exempt
-def handleMultipleImagesUpload(request):
-    if request.method == "POST":
-        
-        images = request.FILES['images']
+class UserViewSet(CreateAPIView):
+    authentication_classes = []
+    def create(self,request):
+        print(request.data)
+        images = request.data['images']
+        print(images)
+
         name_image = str(images)
         gallery_new = Gallery.objects.create(image = images, name_image=name_image)
 
@@ -86,7 +87,7 @@ def handleMultipleImagesUpload(request):
         #print(model.predict("lengua1.jpg").json())
 
         # save an image annotated with your predictions
-        imagendirectorio = os.path.join(BASE_DIR, "media",  name_image )
+        imagendirectorio = os.path.join(BASE_DIR, "media", str(gallery_new.image))
         name_Image_concat = "prediccion"+ name_image
         directorionuevo = os.path.join(BASE_DIR, "media", "prediccion", name_Image_concat)
         model.predict(imagendirectorio).save(directorionuevo)
@@ -97,15 +98,7 @@ def handleMultipleImagesUpload(request):
         if serializer.is_valid():
             serializer.save()
             print(uploaded_images)
-            return Response({"images id":serializer.data})
-        return Response({'message':"Error al retornar respuesta"})
 
-class UserViewSet(CreateAPIView):
-    authentication_classes = []
-    def create(self,request):
-        print(request.data)
-        images = request.FILES['images']
-        print(images)
         return Response({'message':'Upload successfull'})
 
 
