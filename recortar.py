@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Cargar la imagen
-imagen = cv2.imread('segmentar4.jpg')
+imagen = cv2.imread('segmentar8.jpg')
 
 # Convertir la imagen a escala de grises
 imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
@@ -38,7 +38,7 @@ imagen_fondo_blanco = cv2.bitwise_and(imagen_fondo_blanco, imagen_fondo_blanco, 
 imagen_recortada_final = cv2.add(imagen_recortada, imagen_fondo_blanco)
 
 # Guardar la imagen resultante
-cv2.imwrite('recortar5.jpg', imagen_recortada_final)
+cv2.imwrite('recortar8.jpg', imagen_recortada_final)
 
 # Mostrar la imagen original y la imagen recortada
 #cv2.imshow('Imagen Original', imagen)

@@ -1,33 +1,52 @@
 import cv2
 import numpy as np
+from sklearn.cluster import KMeans
 
-def encontrar_pixeles_fondo_blanco(imagen):
-    # Convertir la imagen a escala de grises
-    imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+def segment_tongue(image_path, num_clusters=2):
+    # Cargar la imagen
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # Binarizar la imagen usando un umbral
-    _, imagen_binaria = cv2.threshold(imagen_gris, 200, 255, cv2.THRESH_BINARY)
+    # Convertir la imagen al espacio de color Lab
+    lab_image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
 
-    # Encontrar los contornos de los objetos en la imagen binaria
-    contornos, _ = cv2.findContours(imagen_binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Obtener los canales L, a y b
+    l_channel, a_channel, b_channel = cv2.split(lab_image)
 
-    # Encontrar los píxeles de fondo blanco
-    pixeles_fondo_blanco = []
-    for contorno in contornos:
-        area = cv2.contourArea(contorno)
-        if area > 100:  # Descartar contornos muy pequeños
-            x, y, w, h = cv2.boundingRect(contorno)
-            pixeles_fondo_blanco.extend([(x, y), (x + w, y + h)])
+    # Crear una matriz de características utilizando a_channel y b_channel
+    feature_matrix = np.column_stack((a_channel.flatten(), b_channel.flatten()))
 
-    return pixeles_fondo_blanco
+    # Aplicar K-means
+    kmeans = KMeans(n_clusters=num_clusters, random_state=0)
+    kmeans.fit(feature_matrix)
 
-# Cargar la imagen
-imagen = cv2.imread('recortar1.jpg')
+    # Obtener las etiquetas de píxeles
+    labels = kmeans.labels_
 
-# Encontrar los píxeles de fondo blanco
-pixeles = encontrar_pixeles_fondo_blanco(imagen)
+    # Reshape las etiquetas para que coincidan con la forma de la imagen
+    labels = np.reshape(labels, (image.shape[0], image.shape[1]))
 
-# Imprimir los resultados
-print("Píxeles de fondo blanco encontrados:")
-for pixel in pixeles:
-    print(pixel)
+    # Crear una máscara para separar el cuerpo de la lengua y el revestimiento de la lengua
+    tongue_mask = np.zeros_like(labels, dtype=np.uint8)
+    tongue_mask[labels == 1] = 255  # Cuerpo de la lengua en blanco
+    tongue_mask[labels == 0] = 128  # Revestimiento de la lengua en gris
+
+    # Aplicar la máscara a la imagen original
+    segmented_image = cv2.bitwise_and(image, image, mask=tongue_mask)
+
+    # Calcular el porcentaje del cuerpo de la lengua que se muestra en blanco
+    tongue_pixels = np.count_nonzero(tongue_mask == 255)
+    total_pixels = tongue_mask.shape[0] * tongue_mask.shape[1]
+    tongue_percentage = (tongue_pixels / total_pixels) * 100
+
+    # Imprimir el porcentaje del cuerpo de la lengua que se muestra en blanco
+    print("Porcentaje del cuerpo de la lengua (blanco): {:.2f}%".format(tongue_percentage))
+
+    # Mostrar la imagen segmentada y la máscara
+    cv2.imshow('Segmented Image', segmented_image)
+    cv2.imshow('Tongue Mask', tongue_mask)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Ejemplo de uso
+segment_tongue('recortar3.jpg', num_clusters=2)
