@@ -28,25 +28,26 @@ def segment_tongue(image_path, num_clusters=2):
 
     # Crear una máscara para separar el cuerpo de la lengua y el revestimiento de la lengua
     tongue_mask = np.zeros_like(labels, dtype=np.uint8)
-    tongue_mask[labels == 1] = 255  # Cuerpo de la lengua en blanco
-    tongue_mask[labels == 0] = 128  # Revestimiento de la lengua en gris
+    tongue_mask[labels == 1] = 128  # Revestimiento de la lengua en gris
+    tongue_mask[labels == 0] = 255  # Cuerpo de la lengua en blanco
+
+    # Calcular el porcentaje del revestimiento de la lengua
+    coating_pixels = np.count_nonzero(tongue_mask == 128)
+    total_pixels = tongue_mask.shape[0] * tongue_mask.shape[1]
+    coating_percentage = (coating_pixels / total_pixels) * 100
+
+    # Imprimir el porcentaje del revestimiento de la lengua
+    print("Porcentaje del revestimiento de la lengua: {:.2f}%".format(coating_percentage))
 
     # Aplicar la máscara a la imagen original
     segmented_image = cv2.bitwise_and(image, image, mask=tongue_mask)
 
-    # Calcular el porcentaje del cuerpo de la lengua que se muestra en blanco
-    tongue_pixels = np.count_nonzero(tongue_mask == 255)
-    total_pixels = tongue_mask.shape[0] * tongue_mask.shape[1]
-    tongue_percentage = (tongue_pixels / total_pixels) * 100
-
-    # Imprimir el porcentaje del cuerpo de la lengua que se muestra en blanco
-    print("Porcentaje del cuerpo de la lengua (blanco): {:.2f}%".format(tongue_percentage))
-
     # Mostrar la imagen segmentada y la máscara
     cv2.imshow('Segmented Image', segmented_image)
     cv2.imshow('Tongue Mask', tongue_mask)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.imwrite('saburra7.jpg', tongue_mask)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
 
 # Ejemplo de uso
-segment_tongue('recortar3.jpg', num_clusters=2)
+segment_tongue('recortar7.jpg', num_clusters=2)
