@@ -10,5 +10,6 @@ class Gallery(models.Model):
     paleta_colores = models.CharField(max_length=150, null=True)
     saburra = models.CharField(max_length=150, null=True)
     textura = models.CharField(max_length=150, null=True)
+    porcentaje = models.CharField(default="0.0 %", max_length=150)
     
     #segmentada = models.CharField(max_length=100)

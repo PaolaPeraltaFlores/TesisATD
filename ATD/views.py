@@ -54,6 +54,7 @@ def segment_tongue(image_path, image_create, num_clusters=2):
     coating_percentage = (coating_pixels / total_pixels) * 100
 
     # Imprimir el porcentaje del revestimiento de la lengua
+    image_create.porcentaje = str(round(coating_percentage,2))+" %"
     print("Porcentaje del revestimiento de la lengua: {:.2f}%".format(coating_percentage))
 
     # Aplicar la máscara a la imagen original
@@ -111,7 +112,7 @@ def analyze_image(image_path, image_create):
 
 
 def recortarimagen(nameimageprediction, name_image,image_create):
-    print('nombre', name_image)
+    #print('nombre', name_image)
     imagen = cv2.imread(nameimageprediction)
 
     # Convertir la imagen a escala de grises
@@ -146,7 +147,7 @@ def recortarimagen(nameimageprediction, name_image,image_create):
 
     # Combinar la imagen recortada y el fondo blanco
     imagen_recortada_final = cv2.add(imagen_recortada, imagen_fondo_blanco)
-    print(imagen_recortada_final)
+    #print(imagen_recortada_final)
     # Guardar la imagen resultante
     name_image_ref = "recorte"+ str(name_image)
 
@@ -154,9 +155,9 @@ def recortarimagen(nameimageprediction, name_image,image_create):
     
     directorionuevo1 = os.path.join(BASE_DIR, "media", "recorte", name_image_ref)
     
-    print(directorionuevo1)
+    
     cv2.imwrite(directorionuevo1, imagen_recortada_final)
-    print('Finalizo')
+    #print('Finalizo')
     directorioimagenrecortada = os.path.join(BASE_DIR, image_create.name_recortada)
     analyze_image(directorioimagenrecortada, image_create)
     segment_tongue(directorioimagenrecortada, image_create, num_clusters=2)
