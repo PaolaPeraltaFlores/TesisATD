@@ -23,7 +23,7 @@ def analyze_image(image_path):
     color_image = np.array([[dominant_color]])
     ax.imshow(color_image)
     ax.axis('off')
-    plt.savefig('colord2.jpg')
+    fig.savefig('colordm.jpg', bbox_inches='tight', pad_inches=0)  # Ajuste para eliminar el borde blanco
     plt.show()
 
     if palette:
@@ -32,10 +32,10 @@ def analyze_image(image_path):
         for i, color in enumerate(palette):
             axs[i].imshow(np.array([[color]]))
             axs[i].axis('off')
-        plt.savefig('colorp2.jpg') 
+        fig.savefig('colorpm.jpg', bbox_inches='tight', pad_inches=0)  # Ajuste para eliminar el borde blanco
         plt.show()
     else:
         print("No se encontraron colores en la paleta.")
 
 # Ejemplo de uso
-analyze_image('recortar2.jpg')
+analyze_image('m.jpg')

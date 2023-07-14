@@ -1,8 +1,10 @@
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 class Gallery(models.Model):
     image = models.ImageField(upload_to="original")
+
     name_image = models.CharField(max_length=150, null=True)
     name_segmentada = models.CharField(max_length=150, null=True)
     name_recortada = models.CharField(max_length=150, null=True)
@@ -11,5 +13,6 @@ class Gallery(models.Model):
     saburra = models.CharField(max_length=150, null=True)
     textura = models.CharField(max_length=150, null=True)
     porcentaje = models.CharField(default="0.0 %", max_length=150)
+    created_at = models.DateTimeField(default=timezone.now)
     
     #segmentada = models.CharField(max_length=100)

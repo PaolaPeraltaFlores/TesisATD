@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from ultralytics import YOLO
 import threading
+from skimage import io
+from sklearn.cluster import KMeans
+import webcolors
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -92,7 +95,7 @@ def analyze_image(image_path, image_create):
     ax.imshow(color_image)
     ax.axis('off')
     directoriocolordominante = os.path.join(BASE_DIR, "media", "colordominante", "dominante"+image_create.name_image)
-    plt.savefig(directoriocolordominante)
+    plt.savefig(directoriocolordominante,  bbox_inches='tight', pad_inches=0)
     image_create.color_dominante = os.path.join("media", "colordominante", "dominante"+image_create.name_image)
     #plt.show()
 
@@ -103,7 +106,7 @@ def analyze_image(image_path, image_create):
             axs[i].imshow(np.array([[color]]))
             axs[i].axis('off')
         directoriopaleta = os.path.join(BASE_DIR, "media", "paleta", "paleta"+image_create.name_image)
-        plt.savefig(directoriopaleta) 
+        plt.savefig(directoriopaleta, bbox_inches='tight', pad_inches=0) 
         image_create.paleta_colores = os.path.join("media", "paleta", "paleta"+image_create.name_image)
         #plt.show()
     else:
@@ -200,7 +203,8 @@ class UploadImageCreate(CreateAPIView):
         model.predict(
         source=imagendirectorio, save=True,
         conf=0.55
-        )
+        ) 
+        image_create.textura
         # hilo = threading.Thread(target=recortarimagen, args=[directorionuevo,name_image, image_create])
         # # Iniciar la ejecución del hilo
         # hilo.start()
@@ -214,3 +218,193 @@ class ImageList(ListAPIView):
     authentication_classes = []
     serializer_class = GallerySerializer
     queryset = Gallery.objects.all()
+
+class ImagebyID(ListAPIView):
+    authentication_classes = []
+    serializer_class = GallerySerializer
+    def  list(self, request, *args, **kwargs):
+        image = Gallery.objects.filter(pk=kwargs.get("pk"))
+        serializer = GallerySerializer(image[0])
+        if serializer.is_valid:
+            return Response ({'message':'Succesful','data':serializer.data,'code':200})
+        return Response ({'message':'Error','code':400})
+    
+
+class ImagebyIDcolordominante(ListAPIView):
+    authentication_classes = []
+    serializer_class = GallerySerializer
+    
+    def verificar_range(self,numero, limite_inferior, limite_superior):
+            if numero < limite_inferior:
+                diferencia = limite_inferior - numero
+                return diferencia
+            elif numero > limite_superior:
+                diferencia = numero - limite_superior 
+                return diferencia
+            else:
+                return "dentro del rango"
+            
+    def calcular_color (self, R, G, B, rmin, rmax, gmin, gmax, bmin, bmax, nombrecolor):
+            contador_colores = 0
+            pertenecer = True
+            perteneceg = True
+            perteneceb = True
+
+            if int(R) >= int(rmin) and int(R) <= int(rmax):
+                contador_colores = contador_colores+ 1 
+            else: 
+                pertenecer = False
+
+            if G >= gmin and G <= gmax:
+                contador_colores += 1  
+            else: 
+                perteneceg = False
+
+            if B >= bmin and B <= bmax:
+                contador_colores += 1
+            else: 
+                perteneceb = False
+            print(contador_colores)
+            if contador_colores >= 2:
+                print('El color pertenece a al menos dos colores de la gama'+nombrecolor)
+                resultado = 0
+                if pertenecer == False:
+                    resultado = self.verificar_range(R, rmin, rmax)
+
+                if perteneceg == False:
+                    resultado = self.verificar_range(G, gmin, gmax)
+
+                if perteneceb == False:
+                    resultado = self.verificar_range(B, bmin, bmax)
+
+                #arrayresultado.append({"valor":resultado,"tipo":"palido"})
+                return {"valor":resultado,"tipo":nombrecolor}
+            return False
+            
+
+    def  list(self, request, *args, **kwargs):
+        image = Gallery.objects.filter(pk=kwargs.get("pk"))
+        serializer = GallerySerializer(image[0])
+        if serializer.is_valid:
+            print(serializer['color_dominante'].value)
+            directoriocolorrgb = os.path.join(BASE_DIR, serializer['color_dominante'].value)
+            # Cargar la imagen
+            imagen = io.imread(directoriocolorrgb)
+
+            # Obtener las dimensiones de la imagen
+            alto, ancho, _ = imagen.shape
+
+            # Redimensionar la imagen para facilitar el procesamiento
+            imagen_redimensionada = imagen.reshape(alto * ancho, 3)
+
+            # Aplicar el algoritmo de K-Means para encontrar los colores dominantes
+            kmeans = KMeans(n_clusters=1, n_init=10)  # Establecer n_init en 10
+            kmeans.fit(imagen_redimensionada)
+
+            # Obtener los colores dominantes
+            colores_dominantes = kmeans.cluster_centers_
+
+            # Convertir los valores de los colores a enteros
+            colores_dominantes = colores_dominantes.round().astype(int)
+
+            # Definir vector auxiliar
+            color = colores_dominantes[0]
+            print (color)
+            R = color[0]
+            G = color[1]
+            B = color[2]
+
+            #Color Palido
+            rvpmin = 235
+            rvpmax = 260
+            gvpmin = 230
+            gvpmax = 255
+            bvpmin = 230
+            bvpmax = 255
+
+            #Color Rosa
+            rvrmin = 225
+            rvrmax = 265
+            gvrmin = 90
+            gvrmax = 217
+            bvrmin = 125
+            bvrmax = 226
+
+            #Color Rojo rv1
+            rv1min = 214
+            rv1max = 260
+            gv1min = 0
+            gv1max = 60
+            bv1min = 45
+            bv1max = 105
+
+            #Color ROjo INtenso rv2
+            rv2min = 90
+            rv2max = 250
+            gv2min = 0
+            gv2max = 60
+            bv2min = 0
+            bv2max = 70
+
+            #Color Violeta
+            rvvmin = 144
+            rvvmax = 210
+            gvvmin = 35
+            gvvmax = 150
+            bvvmin = 90
+            bvvmax = 215
+
+            #COlor Azul
+            rvamin = 165
+            rvamax = 210
+            gvamin = 190
+            gvamax = 215
+            bvamin = 195
+            bvamax = 240
+
+            arrayresultado=[]
+
+            #palido
+            resultadopalido = self.calcular_color(R, G, B, rvpmin, rvpmax, gvpmin, gvpmax, bvpmin, bvpmax, 'palido')
+            print(resultadopalido)
+            if resultadopalido !=  False:
+                arrayresultado.append(resultadopalido)
+
+            #rosado 
+            resultadorosado = self.calcular_color(R, G, B, rvrmin, rvrmax, gvrmin, gvrmax, bvrmin, bvrmax, 'rosado')
+            print(resultadorosado)
+            if resultadorosado !=  False:
+                arrayresultado.append(resultadorosado)
+
+            #rojo
+            resultadorojo = self.calcular_color(R, G, B, rv1min, rv1max, gv1min, gv1max, bv1min, bv1max, 'rojo')
+            print(resultadorojo)
+            if resultadorojo !=  False:
+                arrayresultado.append(resultadorojo)
+
+            #rojo intenso
+            resultadorojointenso = self.calcular_color(R, G, B, rv2min, rv2max, gv2min, gv2max, bv2min, bv2max, 'rojo intenso')
+            print('intenso',resultadorojointenso)
+            if resultadorojointenso !=  False:
+                arrayresultado.append(resultadorojointenso)
+
+            #violeta
+            resultadovioleta = self.calcular_color(R, G, B, rvvmin, rvvmax, gvvmin, gvvmax, bvvmin, bvvmax, 'violeta')
+            print(resultadovioleta)
+            if resultadovioleta !=  False:
+                arrayresultado.append(resultadovioleta)
+
+            #azul
+            resultadoazul = self.calcular_color(R, G, B, rvamin, rvamax, gvamin, gvamax, bvamin, bvamax, 'azul')
+            print(resultadoazul)
+            if resultadoazul !=  False:
+                arrayresultado.append(resultadoazul)
+
+            print(arrayresultado)
+
+            colorResultante = ''
+            colormenor = min(arrayresultado, key=lambda p: p['valor'])
+            colorResultante = colormenor['tipo']
+            print(colorResultante)
+            return Response ({'message':'Succesful','data':colorResultante,'code':200})
+        return Response ({'message':'Error','code':400})

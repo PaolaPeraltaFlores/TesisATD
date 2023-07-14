@@ -50,4 +50,4 @@ def segment_tongue(image_path, num_clusters=2):
     #cv2.destroyAllWindows()
 
 # Ejemplo de uso
-segment_tongue('recortar7.jpg', num_clusters=2)
+segment_tongue('recorteimage_c3iqi8s.jpg', num_clusters=2)
