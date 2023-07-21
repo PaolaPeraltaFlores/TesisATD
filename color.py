@@ -38,4 +38,4 @@ def analyze_image(image_path):
         print("No se encontraron colores en la paleta.")
 
 # Ejemplo de uso
-analyze_image('m.jpg')
+analyze_image('a.jpg')

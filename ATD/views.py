@@ -199,25 +199,41 @@ class UploadImageCreate(CreateAPIView):
         image_create.name_segmentada = os.path.join("media", "prediccion", name_Image_concat)
         recortarimagen(directorionuevo,name_image, image_create)
         
+        directorioL = os.path.join(BASE_DIR, "media", "textura")
+        foldeName=name_image.split(".")
+
         model = YOLO('/home/paola/Desktop/TEXTURA/runs/detect/train4/weights/best.pt')
-        model.predict(
-        source=imagendirectorio, save=True,
+        predictions = model.predict(
+        source=imagendirectorio, 
+        save=True,
+        project=directorioL,
+        name=foldeName[0],
+        #save_crop=True,
         conf=0.55
-        ) 
-        image_create.textura
+        )
+        
+        print("--")
+        #print(predictions)
+        #resultado_yolo = os.path.join(BASE_DIR, "media", "prediccion", "textura.jpg")
+        #predictions.save(directorionuevo)
+        print("--")
+        image_create.textura="media/textura/"+foldeName[0]+"/"+name_image
+        
         # hilo = threading.Thread(target=recortarimagen, args=[directorionuevo,name_image, image_create])
         # # Iniciar la ejecución del hilo
         # hilo.start()
         # #hilo.join()
         image_create.save()
 
+
         serializer = GallerySerializer(image_create)
         return Response({'message':'Successful','data':serializer.data,'code':200})
 
 class ImageList(ListAPIView):
     authentication_classes = []
+    queryset = Gallery.objects.all().order_by('-created_at')[:5]
     serializer_class = GallerySerializer
-    queryset = Gallery.objects.all()
+    
 
 class ImagebyID(ListAPIView):
     authentication_classes = []
@@ -244,7 +260,7 @@ class ImagebyIDcolordominante(ListAPIView):
             else:
                 return "dentro del rango"
             
-    def calcular_color (self, R, G, B, rmin, rmax, gmin, gmax, bmin, bmax, nombrecolor):
+    def calcular_color (self, R, G, B, rmin, rmax, gmin, gmax, bmin, bmax, nombrecolor, descripcion):
             contador_colores = 0
             pertenecer = True
             perteneceg = True
@@ -278,7 +294,7 @@ class ImagebyIDcolordominante(ListAPIView):
                     resultado = self.verificar_range(B, bmin, bmax)
 
                 #arrayresultado.append({"valor":resultado,"tipo":"palido"})
-                return {"valor":resultado,"tipo":nombrecolor}
+                return {"valor":resultado,"tipo":nombrecolor, "descripcion":descripcion}
             return False
             
 
@@ -307,6 +323,7 @@ class ImagebyIDcolordominante(ListAPIView):
             # Convertir los valores de los colores a enteros
             colores_dominantes = colores_dominantes.round().astype(int)
 
+            print(colores_dominantes)
             # Definir vector auxiliar
             color = colores_dominantes[0]
             print (color)
@@ -365,37 +382,43 @@ class ImagebyIDcolordominante(ListAPIView):
             arrayresultado=[]
 
             #palido
-            resultadopalido = self.calcular_color(R, G, B, rvpmin, rvpmax, gvpmin, gvpmax, bvpmin, bvpmax, 'palido')
+            descpalido = "El color de su lengua pertenece a la gama del color Pálido, el cual puede indicar una mala circulación de sangre."
+            resultadopalido = self.calcular_color(R, G, B, rvpmin, rvpmax, gvpmin, gvpmax, bvpmin, bvpmax, 'palido', descpalido)
             print(resultadopalido)
             if resultadopalido !=  False:
                 arrayresultado.append(resultadopalido)
 
             #rosado 
-            resultadorosado = self.calcular_color(R, G, B, rvrmin, rvrmax, gvrmin, gvrmax, bvrmin, bvrmax, 'rosado')
+            descrosado = "El color de su lengua pertenece a la gama del color Rosado, siendo este el color normal en una persona saludable."
+            resultadorosado = self.calcular_color(R, G, B, rvrmin, rvrmax, gvrmin, gvrmax, bvrmin, bvrmax, 'rosado', descrosado)
             print(resultadorosado)
             if resultadorosado !=  False:
                 arrayresultado.append(resultadorosado)
 
             #rojo
-            resultadorojo = self.calcular_color(R, G, B, rv1min, rv1max, gv1min, gv1max, bv1min, bv1max, 'rojo')
+            descrojo = "El color de su lengua pertenece a la gama del color Rojo. En algunas ocasiones se presenta como el color normal de la lengua, sin embargo, puede tener implicaciones patológicas."
+            resultadorojo = self.calcular_color(R, G, B, rv1min, rv1max, gv1min, gv1max, bv1min, bv1max, 'rojo', descrojo)
             print(resultadorojo)
             if resultadorojo !=  False:
                 arrayresultado.append(resultadorojo)
 
             #rojo intenso
-            resultadorojointenso = self.calcular_color(R, G, B, rv2min, rv2max, gv2min, gv2max, bv2min, bv2max, 'rojo intenso')
-            print('intenso',resultadorojointenso)
+            descintenso = "El color de su lengua pertenece a la gama del color Rojo Intenso. Este color puede indicar un aumento de temperatura en el cuerpo."
+            resultadorojointenso = self.calcular_color(R, G, B, rv2min, rv2max, gv2min, gv2max, bv2min, bv2max, 'rojo intenso', descintenso)
+            print(resultadorojointenso)
             if resultadorojointenso !=  False:
                 arrayresultado.append(resultadorojointenso)
 
             #violeta
-            resultadovioleta = self.calcular_color(R, G, B, rvvmin, rvvmax, gvvmin, gvvmax, bvvmin, bvvmax, 'violeta')
+            descvioleta = "El color de su lengua pertenece a la gama del color Violeta. Este color puede observarse durante el desarrollo de una enfermedad."
+            resultadovioleta = self.calcular_color(R, G, B, rvvmin, rvvmax, gvvmin, gvvmax, bvvmin, bvvmax, 'violeta', descvioleta)
             print(resultadovioleta)
             if resultadovioleta !=  False:
                 arrayresultado.append(resultadovioleta)
 
             #azul
-            resultadoazul = self.calcular_color(R, G, B, rvamin, rvamax, gvamin, gvamax, bvamin, bvamax, 'azul')
+            descazul = "El color de su lengua pertenece a la gama del color Azul. Este color puede ser un indicativo de frío en el cuerpo y puede verse afectado su hígado y riñón."
+            resultadoazul = self.calcular_color(R, G, B, rvamin, rvamax, gvamin, gvamax, bvamin, bvamax, 'azul', descazul)
             print(resultadoazul)
             if resultadoazul !=  False:
                 arrayresultado.append(resultadoazul)
@@ -405,6 +428,7 @@ class ImagebyIDcolordominante(ListAPIView):
             colorResultante = ''
             colormenor = min(arrayresultado, key=lambda p: p['valor'])
             colorResultante = colormenor['tipo']
+            descripcionresultante = colormenor['descripcion']
             print(colorResultante)
-            return Response ({'message':'Succesful','data':colorResultante,'code':200})
+            return Response ({'message':'Succesful','data':colorResultante, 'descripcion':descripcionresultante, 'code':200})
         return Response ({'message':'Error','code':400})

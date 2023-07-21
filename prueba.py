@@ -51,7 +51,7 @@ def calcular_color (R, G, B, rmin, rmax, gmin, gmax, bmin, bmax, nombrecolor):
     
 
 # Cargar la imagen
-imagen = io.imread('colordo.jpg')
+imagen = io.imread('o.jpg')
 
 # Obtener las dimensiones de la imagen
 alto, ancho, _ = imagen.shape
